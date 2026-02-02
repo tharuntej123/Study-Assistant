@@ -1,4 +1,5 @@
 import multer from 'multer';
+import pdfParse from 'pdf-parse';
 import StudyMaterial from '../models/StudyMaterial.js';
 import { uploadFile, deleteFile } from '../services/s3Service.js';
 
@@ -42,16 +43,31 @@ const uploadMaterial = async (req, res) => {
         req.workspace._id
       );
 
+      let transcribedText = '';
+
+      if (req.file.mimetype === 'application/pdf') {
+        try {
+          const pdfData = await pdfParse(req.file.buffer);
+          transcribedText = pdfData.text;
+
+          const maxTextSize = 5 * 1024 * 1024;
+          if (transcribedText.length > maxTextSize) {
+            transcribedText = transcribedText.substring(0, maxTextSize);
+          }
+        } catch (pdfError) {
+          console.error('PDF parsing error:', pdfError.message);
+        }
+      }
+
       const material = await StudyMaterial.create({
         workspaceId: req.workspace._id,
         title,
         type: fileType,
         s3Key: key,
         fileUrl: location,
+        transcribedText,
         uploadedBy: req.user._id,
       });
-
-      // TODO: Trigger AI Text Extraction here (Phase 4)
 
       res.status(201).json({
         message: 'File uploaded successfully',

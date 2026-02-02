@@ -6,6 +6,10 @@ import {
   getWorkspaceMaterials,
   deleteMaterial,
 } from '../controllers/materialController.js';
+import {
+  generateFlashcardsFromMaterial,
+  chatWithWorkspace,
+} from '../controllers/aiController.js';
 
 const router = express.Router();
 
@@ -30,6 +34,21 @@ router.delete(
   validateWorkspaceAccess,
   requireRole('admin', 'editor'),
   deleteMaterial
+);
+
+router.post(
+  '/:workspaceId/flashcards/generate',
+  protect,
+  validateWorkspaceAccess,
+  requireRole('admin', 'editor'),
+  generateFlashcardsFromMaterial
+);
+
+router.post(
+  '/:workspaceId/chat',
+  protect,
+  validateWorkspaceAccess,
+  chatWithWorkspace
 );
 
 export default router;
