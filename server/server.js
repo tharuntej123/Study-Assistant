@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import passport from './config/passport.js';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
+import workspaceRoutes from './routes/workspaceRoutes.js';
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use(cookieParser());
 app.use(passport.initialize());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/workspaces', workspaceRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'StudyWorkspace AI Server is running' });
