@@ -40,35 +40,38 @@ const Flashcards = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Flashcards</h1>
+    <div>
+      <div className="mb-6">
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Flashcards</h1>
+        <p className="text-gray-500 text-sm">Study with AI-generated flashcards</p>
+      </div>
 
       {!flashcardSets || flashcardSets.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-          <Brain className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No flashcard sets yet</h3>
-          <p className="text-gray-500">
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border-2 border-dashed border-purple-200 p-12 lg:p-16 text-center">
+          <Brain className="w-14 h-14 text-purple-400 mx-auto mb-4" />
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-900 mb-2">No flashcard sets yet</h3>
+          <p className="text-gray-500 text-sm">
             Generate flashcards from your PDFs in the Library
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
           {flashcardSets.map((set) => (
             <div
               key={set._id}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-200 cursor-pointer hover:-translate-y-0.5"
               onClick={() => setSelectedSet(set)}
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-purple-50 rounded-lg">
+                <div className="p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
                   <Brain className="w-6 h-6 text-purple-600" />
                 </div>
-                <span className="text-sm text-gray-500">
+                <span className="text-xs font-semibold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full">
                   {set.cards?.length || 0} cards
                 </span>
               </div>
 
-              <h3 className="font-semibold text-gray-900 mb-2">{set.title}</h3>
+              <h3 className="font-bold text-gray-900 mb-2">{set.title}</h3>
               <p className="text-sm text-gray-500 flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
                 {new Date(set.createdAt).toLocaleDateString()}

@@ -5,11 +5,13 @@ import {
   uploadMaterial,
   getWorkspaceMaterials,
   deleteMaterial,
+  getMaterial,
 } from '../controllers/materialController.js';
 import {
   generateFlashcardsFromMaterial,
   chatWithWorkspace,
   getWorkspaceFlashcards,
+  summarizeMaterial,
 } from '../controllers/aiController.js';
 import {
   getUserWorkspaces,
@@ -34,6 +36,13 @@ router.get(
   protect,
   validateWorkspaceAccess,
   getWorkspaceMaterials
+);
+
+router.get(
+  '/:workspaceId/materials/:materialId',
+  protect,
+  validateWorkspaceAccess,
+  getMaterial
 );
 
 router.delete(
@@ -64,6 +73,13 @@ router.post(
   protect,
   validateWorkspaceAccess,
   chatWithWorkspace
+);
+
+router.post(
+  '/:workspaceId/materials/:materialId/summarize',
+  protect,
+  validateWorkspaceAccess,
+  summarizeMaterial
 );
 
 export default router;

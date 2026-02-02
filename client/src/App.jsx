@@ -10,6 +10,7 @@ import Library from './pages/Library';
 import Flashcards from './pages/Flashcards';
 import WorkspaceChat from './pages/WorkspaceChat';
 import Calendar from './pages/Calendar';
+import MaterialStudyPage from './pages/MaterialStudyPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +39,7 @@ function App() {
             >
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="library" element={<Library />} />
+              <Route path="material/:materialId" element={<MaterialStudyPage />} />
               <Route path="flashcards" element={<Flashcards />} />
               <Route path="chat" element={<WorkspaceChat />} />
               <Route path="calendar" element={<Calendar />} />

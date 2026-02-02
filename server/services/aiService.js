@@ -2,10 +2,45 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+const generateSummary = async (text) => {
+  try {
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+    });
+
+    // Truncate to 20k characters to avoid token limits
+    const maxChars = 20000;
+    const textToProcess = text.length > maxChars ? text.substring(0, maxChars) : text;
+
+    const prompt = `You are an expert study assistant. Summarize the following study material into 5 concise bullet points and a short concluding paragraph. Capture the key technical terms and main concepts.
+
+Study Material:
+${textToProcess}
+
+Format your response as:
+• Bullet point 1
+• Bullet point 2
+• Bullet point 3
+• Bullet point 4
+• Bullet point 5
+
+**Conclusion:** Your concluding paragraph here.`;
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const summary = response.text();
+
+    return summary;
+  } catch (error) {
+    console.error('Gemini summary generation error:', error.message);
+    throw new Error('Failed to generate summary');
+  }
+};
+
 const generateFlashcards = async (text) => {
   try {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       generationConfig: {
         responseMimeType: 'application/json',
       },
@@ -32,7 +67,7 @@ ${text}`;
 const chatWithContext = async (query, contextText) => {
   try {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
     });
 
     const prompt = `You are a helpful study assistant. Answer the user's question based strictly on the provided context.
@@ -54,4 +89,4 @@ ${query}`;
   }
 };
 
-export { generateFlashcards, chatWithContext };
+export { generateSummary, generateFlashcards, chatWithContext };

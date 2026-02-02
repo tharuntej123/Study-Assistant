@@ -27,6 +27,14 @@ const studyMaterialSchema = new mongoose.Schema(
     transcribedText: {
       type: String,
     },
+    summary: {
+      type: String,
+      default: '',
+    },
+    isProcessed: {
+      type: Boolean,
+      default: false,
+    },
     uploadedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

@@ -1,10 +1,50 @@
 import multer from 'multer';
-import { createRequire } from 'module';
+import { PDFParse } from 'pdf-parse';
 import StudyMaterial from '../models/StudyMaterial.js';
+import FlashcardSet from '../models/FlashcardSet.js';
 import { uploadFile, deleteFile } from '../services/s3Service.js';
+import { generateSummary, generateFlashcards } from '../services/aiService.js';
 
-const require = createRequire(import.meta.url);
-const pdfParse = require('pdf-parse');
+// Background AI processing function (non-blocking)
+const processAIContent = async (material, workspaceId, userId) => {
+  try {
+    if (!material.transcribedText || material.transcribedText.trim() === '') {
+      console.log(`No text to process for material ${material._id}`);
+      return;
+    }
+
+    const textToProcess = material.transcribedText.substring(0, 20000);
+
+    // Generate summary
+    try {
+      const summary = await generateSummary(textToProcess);
+      await StudyMaterial.findByIdAndUpdate(material._id, {
+        summary,
+        isProcessed: true,
+      });
+      console.log(`Summary generated for material ${material._id}`);
+    } catch (summaryError) {
+      console.error(`Summary generation failed for ${material._id}:`, summaryError.message);
+    }
+
+    // Generate flashcards
+    try {
+      const flashcardsData = await generateFlashcards(textToProcess);
+      await FlashcardSet.create({
+        workspaceId,
+        title: `Flashcards - ${material.title}`,
+        cards: flashcardsData,
+        createdBy: userId,
+        sourceId: material._id,
+      });
+      console.log(`Flashcards generated for material ${material._id}`);
+    } catch (flashcardError) {
+      console.error(`Flashcard generation failed for ${material._id}:`, flashcardError.message);
+    }
+  } catch (error) {
+    console.error(`AI processing failed for material ${material._id}:`, error.message);
+  }
+};
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -50,8 +90,10 @@ const uploadMaterial = async (req, res) => {
 
       if (req.file.mimetype === 'application/pdf') {
         try {
-          const pdfData = await pdfParse(req.file.buffer);
-          transcribedText = pdfData.text;
+          const pdfParser = new PDFParse({ data: req.file.buffer });
+          await pdfParser.load();
+          const result = await pdfParser.getText();
+          transcribedText = result.text || '';
 
           const maxTextSize = 5 * 1024 * 1024;
           if (transcribedText.length > maxTextSize) {
@@ -72,10 +114,17 @@ const uploadMaterial = async (req, res) => {
         uploadedBy: req.user._id,
       });
 
+      // Respond immediately to user
       res.status(201).json({
-        message: 'File uploaded successfully',
+        message: 'File uploaded successfully. AI processing started in background.',
         material: await material.populate('uploadedBy', 'displayName email avatar'),
+        processing: true,
       });
+
+      // Start AI processing in background (non-blocking)
+      if (fileType === 'pdf' && transcribedText) {
+        processAIContent(material, req.workspace._id, req.user._id);
+      }
     });
   } catch (error) {
     console.error('Upload material error:', error.message);
@@ -120,4 +169,24 @@ const deleteMaterial = async (req, res) => {
   }
 };
 
-export { uploadMaterial, getWorkspaceMaterials, deleteMaterial };
+const getMaterial = async (req, res) => {
+  try {
+    const { materialId } = req.params;
+
+    const material = await StudyMaterial.findOne({
+      _id: materialId,
+      workspaceId: req.workspace._id,
+    }).populate('uploadedBy', 'displayName email avatar');
+
+    if (!material) {
+      return res.status(404).json({ error: 'Material not found' });
+    }
+
+    res.json({ material });
+  } catch (error) {
+    console.error('Get material error:', error.message);
+    res.status(500).json({ error: 'Server error fetching material' });
+  }
+};
+
+export { uploadMaterial, getWorkspaceMaterials, deleteMaterial, getMaterial };

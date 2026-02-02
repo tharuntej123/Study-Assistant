@@ -55,15 +55,15 @@ const WorkspaceChat = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto h-[calc(100vh-12rem)] flex flex-col">
+    <div className="h-[calc(100vh-10rem)] flex flex-col">
       {/* Header */}
       <div className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">AI Study Assistant</h1>
-        <p className="text-gray-600">Ask questions about your materials</p>
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">AI Study Assistant</h1>
+        <p className="text-gray-500 text-sm">Ask questions about your materials</p>
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
+      <div className="flex-1 bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col shadow-sm">
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {messages.length === 0 ? (
             <div className="text-center py-12">

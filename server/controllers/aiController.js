@@ -1,6 +1,6 @@
 import StudyMaterial from '../models/StudyMaterial.js';
 import FlashcardSet from '../models/FlashcardSet.js';
-import { generateFlashcards, chatWithContext } from '../services/aiService.js';
+import { generateSummary, generateFlashcards, chatWithContext } from '../services/aiService.js';
 
 const generateFlashcardsFromMaterial = async (req, res) => {
   try {
@@ -111,4 +111,58 @@ const getWorkspaceFlashcards = async (req, res) => {
   }
 };
 
-export { generateFlashcardsFromMaterial, chatWithWorkspace, getWorkspaceFlashcards };
+const summarizeMaterial = async (req, res) => {
+  try {
+    const { materialId } = req.params;
+
+    const material = await StudyMaterial.findOne({
+      _id: materialId,
+      workspaceId: req.workspace._id,
+    });
+
+    if (!material) {
+      return res.status(404).json({ error: 'Material not found' });
+    }
+
+    // Cache hit - return existing summary
+    if (material.summary && material.summary.trim() !== '') {
+      return res.json({
+        summary: material.summary,
+        cached: true,
+        material: {
+          id: material._id,
+          title: material.title,
+        },
+      });
+    }
+
+    // Check if there's text to summarize
+    if (!material.transcribedText || material.transcribedText.trim() === '') {
+      return res.status(400).json({
+        error: 'No text available for summarization. PDF may be empty or text extraction failed.',
+      });
+    }
+
+    // Generate new summary
+    const summary = await generateSummary(material.transcribedText);
+
+    // Update material with summary and mark as processed
+    material.summary = summary;
+    material.isProcessed = true;
+    await material.save();
+
+    res.json({
+      summary,
+      cached: false,
+      material: {
+        id: material._id,
+        title: material.title,
+      },
+    });
+  } catch (error) {
+    console.error('Summarize material error:', error.message);
+    res.status(500).json({ error: 'Server error generating summary' });
+  }
+};
+
+export { generateFlashcardsFromMaterial, chatWithWorkspace, getWorkspaceFlashcards, summarizeMaterial };
