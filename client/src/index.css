@@ -1,44 +1,78 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --primary: #111827;
-  --accent: #2563eb;
-  --surface: #ffffff;
-  --surface-alt: #f9fafb;
-  --border: #e5e7eb;
-  --text: #111827;
-  --text-muted: #6b7280;
-  --success: #059669;
-  --error: #dc2626;
-}
-
-body {
-  background: var(--surface-alt);
-  color: var(--text);
-  -webkit-font-smoothing: antialiased;
+@layer base {
+  body {
+    background-color: rgb(248 250 252);
+    color: rgb(15 23 42);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { 
+    opacity: 0; 
+    transform: translateY(8px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
 }
 
-.animate-fadeIn { animation: fadeIn 0.2s ease-out; }
+@keyframes slideIn {
+  from { 
+    opacity: 0; 
+    transform: translateX(-8px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateX(0); 
+  }
+}
+
+@keyframes scaleIn {
+  from { 
+    opacity: 0; 
+    transform: scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
+.animate-fadeIn { 
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+}
+
+.animate-slideIn { 
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+}
+
+.animate-scaleIn { 
+  animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1); 
+}
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+::-webkit-scrollbar { 
+  width: 8px; 
+  height: 8px;
+}
 
-/* Prose */
-.prose { max-width: none; line-height: 1.7; }
-.prose p { margin-bottom: 1em; }
-.prose h1, .prose h2, .prose h3 { font-weight: 600; margin-top: 1.5em; margin-bottom: 0.5em; }
-.prose ul, .prose ol { padding-left: 1.25em; margin-bottom: 1em; }
-.prose code { background: #f3f4f6; padding: 0.2em 0.4em; border-radius: 4px; font-size: 0.875em; }
-.prose pre { background: #1f2937; color: #f9fafb; padding: 1em; border-radius: 8px; }
-.prose blockquote { border-left: 3px solid var(--accent); padding-left: 1em; color: var(--text-muted); }
+::-webkit-scrollbar-track { 
+  background: transparent; 
+}
+
+::-webkit-scrollbar-thumb { 
+  background-color: rgb(203 213 225);
+  border-radius: 0.25rem;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover { 
+  background-color: rgb(148 163 184);
+  background-clip: padding-box;
+}
