@@ -14,6 +14,13 @@ import {
   summarizeMaterial,
 } from '../controllers/aiController.js';
 import {
+  generateQuizFromMaterial,
+  getQuizByMaterial,
+  getWorkspaceQuizzes,
+  saveQuizResult,
+  getUserProgress,
+} from '../controllers/quizController.js';
+import {
   getUserWorkspaces,
   createWorkspace,
 } from '../controllers/workspaceController.js';
@@ -80,6 +87,42 @@ router.post(
   protect,
   validateWorkspaceAccess,
   summarizeMaterial
+);
+
+// Quiz routes
+router.post(
+  '/:workspaceId/quiz/generate',
+  protect,
+  validateWorkspaceAccess,
+  generateQuizFromMaterial
+);
+
+router.get(
+  '/:workspaceId/quiz',
+  protect,
+  validateWorkspaceAccess,
+  getWorkspaceQuizzes
+);
+
+router.get(
+  '/:workspaceId/quiz/material/:materialId',
+  protect,
+  validateWorkspaceAccess,
+  getQuizByMaterial
+);
+
+router.post(
+  '/:workspaceId/quiz/save-result',
+  protect,
+  validateWorkspaceAccess,
+  saveQuizResult
+);
+
+router.get(
+  '/:workspaceId/progress',
+  protect,
+  validateWorkspaceAccess,
+  getUserProgress
 );
 
 export default router;

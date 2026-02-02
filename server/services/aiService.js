@@ -89,4 +89,51 @@ ${query}`;
   }
 };
 
-export { generateSummary, generateFlashcards, chatWithContext };
+const generateQuiz = async (text) => {
+  try {
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      generationConfig: {
+        responseMimeType: 'application/json',
+      },
+    });
+
+    // Truncate to 20k characters to avoid token limits
+    const maxChars = 20000;
+    const textToProcess = text.length > maxChars ? text.substring(0, maxChars) : text;
+
+    const prompt = `You are a strict exam setter. Based on the provided text, generate 10 multiple-choice questions to test understanding of the material.
+
+Return a JSON Array of objects. Each object MUST have exactly these fields:
+- "questionText": The question as a string
+- "options": An array of exactly 4 plausible answer options as strings
+- "correctIndex": The index (0-3) of the correct option as a number
+- "explanation": A brief sentence explaining why the correct answer is right and why other options might be wrong
+
+Example format:
+[
+  {
+    "questionText": "What is the powerhouse of the cell?",
+    "options": ["Nucleus", "Mitochondria", "Ribosome", "Golgi apparatus"],
+    "correctIndex": 1,
+    "explanation": "The mitochondria is known as the powerhouse of the cell because it produces ATP through cellular respiration. The nucleus stores DNA, ribosomes synthesize proteins, and the Golgi apparatus packages proteins."
+  }
+]
+
+Text to generate questions from:
+${textToProcess}`;
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const jsonText = response.text();
+
+    const questions = JSON.parse(jsonText);
+
+    return questions;
+  } catch (error) {
+    console.error('Gemini quiz generation error:', error.message);
+    throw new Error('Failed to generate quiz');
+  }
+};
+
+export { generateSummary, generateFlashcards, chatWithContext, generateQuiz };

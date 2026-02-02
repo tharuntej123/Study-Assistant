@@ -12,9 +12,11 @@ import {
   Brain,
   Send,
   Loader2,
+  ClipboardList,
 } from 'lucide-react';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
+import QuizModal from '../components/QuizModal';
 
 const MaterialStudyPage = () => {
   const { workspaceId, materialId } = useParams();
@@ -22,6 +24,7 @@ const MaterialStudyPage = () => {
   const [activeTab, setActiveTab] = useState('summary');
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
+  const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
 
   // Fetch material details (with polling for processing status)
   const { data: material, isLoading } = useQuery({
@@ -116,6 +119,7 @@ const MaterialStudyPage = () => {
   const tabs = [
     { id: 'summary', label: 'Summary', icon: Sparkles },
     { id: 'flashcards', label: 'Flashcards', icon: Layers },
+    { id: 'quiz', label: 'Quiz', icon: ClipboardList },
     { id: 'chat', label: 'Chat', icon: MessageSquare },
   ];
 
@@ -478,9 +482,46 @@ const MaterialStudyPage = () => {
                 </form>
               </div>
             )}
+
+            {/* Quiz Tab */}
+            {activeTab === 'quiz' && (
+              <div className="h-full flex flex-col items-center justify-center text-center py-8">
+                <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mb-4">
+                  <ClipboardList className="w-8 h-8 text-indigo-600" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">
+                  Test Your Knowledge
+                </h3>
+                <p className="text-sm text-gray-500 mb-6 max-w-xs">
+                  Take a quiz with 10 multiple-choice questions generated from this document
+                </p>
+                {material.transcribedText ? (
+                  <button
+                    onClick={() => setIsQuizModalOpen(true)}
+                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl transition-all font-medium shadow-md hover:shadow-lg"
+                  >
+                    <Brain className="w-5 h-5" />
+                    Start Quiz
+                  </button>
+                ) : (
+                  <p className="text-sm text-gray-400">
+                    No text content available for quiz generation
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Quiz Modal */}
+      <QuizModal
+        isOpen={isQuizModalOpen}
+        onClose={() => setIsQuizModalOpen(false)}
+        workspaceId={workspaceId}
+        materialId={materialId}
+        materialTitle={material?.title}
+      />
     </div>
   );
 };
