@@ -9,9 +9,17 @@ import {
 import {
   generateFlashcardsFromMaterial,
   chatWithWorkspace,
+  getWorkspaceFlashcards,
 } from '../controllers/aiController.js';
+import {
+  getUserWorkspaces,
+  createWorkspace,
+} from '../controllers/workspaceController.js';
 
 const router = express.Router();
+
+router.get('/', protect, getUserWorkspaces);
+router.post('/', protect, createWorkspace);
 
 router.post(
   '/:workspaceId/upload',
@@ -42,6 +50,13 @@ router.post(
   validateWorkspaceAccess,
   requireRole('admin', 'editor'),
   generateFlashcardsFromMaterial
+);
+
+router.get(
+  '/:workspaceId/flashcards',
+  protect,
+  validateWorkspaceAccess,
+  getWorkspaceFlashcards
 );
 
 router.post(

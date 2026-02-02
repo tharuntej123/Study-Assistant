@@ -96,4 +96,19 @@ const chatWithWorkspace = async (req, res) => {
   }
 };
 
-export { generateFlashcardsFromMaterial, chatWithWorkspace };
+const getWorkspaceFlashcards = async (req, res) => {
+  try {
+    const flashcardSets = await FlashcardSet.find({
+      workspaceId: req.workspace._id,
+    })
+      .sort({ createdAt: -1 })
+      .populate('createdBy', 'displayName email avatar');
+
+    res.json({ flashcardSets });
+  } catch (error) {
+    console.error('Get flashcards error:', error.message);
+    res.status(500).json({ error: 'Server error fetching flashcards' });
+  }
+};
+
+export { generateFlashcardsFromMaterial, chatWithWorkspace, getWorkspaceFlashcards };
