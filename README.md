@@ -1,2 +1,3 @@
-# Study-Assistent
+# Study-Assistant
 AI-Powered Study Assistant
+

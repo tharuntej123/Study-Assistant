@@ -1,0 +1,27 @@
+{
+  "name": "studyworkspace-ai",
+  "version": "1.0.0",
+  "description": "AI-Powered Study Assistant - A workspace-based platform for organizing notes, generating AI flashcards/quizzes, and scheduling study sessions",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"pnpm run server\" \"pnpm run client\"",
+    "server": "cd server && pnpm run dev",
+    "client": "cd client && pnpm run dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/R-Shanmuga18/Study-Assistant.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/R-Shanmuga18/Study-Assistant/issues"
+  },
+  "homepage": "https://github.com/R-Shanmuga18/Study-Assistant#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
