@@ -24,6 +24,15 @@ import {
   getUserWorkspaces,
   createWorkspace,
 } from '../controllers/workspaceController.js';
+import {
+  getWorkspaceSessions,
+  createSession,
+  updateSession,
+  deleteSession,
+  getStudyStats,
+  checkCalendarStatus,
+  syncSessionToCalendar,
+} from '../controllers/scheduleController.js';
 
 const router = express.Router();
 
@@ -123,6 +132,56 @@ router.get(
   protect,
   validateWorkspaceAccess,
   getUserProgress
+);
+
+// Schedule routes
+router.get(
+  '/:workspaceId/sessions',
+  protect,
+  validateWorkspaceAccess,
+  getWorkspaceSessions
+);
+
+router.post(
+  '/:workspaceId/sessions',
+  protect,
+  validateWorkspaceAccess,
+  createSession
+);
+
+router.put(
+  '/:workspaceId/sessions/:sessionId',
+  protect,
+  validateWorkspaceAccess,
+  updateSession
+);
+
+router.delete(
+  '/:workspaceId/sessions/:sessionId',
+  protect,
+  validateWorkspaceAccess,
+  deleteSession
+);
+
+router.get(
+  '/:workspaceId/schedule/stats',
+  protect,
+  validateWorkspaceAccess,
+  getStudyStats
+);
+
+router.get(
+  '/:workspaceId/schedule/calendar-status',
+  protect,
+  validateWorkspaceAccess,
+  checkCalendarStatus
+);
+
+router.post(
+  '/:workspaceId/sessions/:sessionId/sync',
+  protect,
+  validateWorkspaceAccess,
+  syncSessionToCalendar
 );
 
 export default router;

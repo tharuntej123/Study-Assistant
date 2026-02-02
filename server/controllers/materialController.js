@@ -92,8 +92,9 @@ const uploadMaterial = async (req, res) => {
         try {
           const pdfParser = new PDFParse({ data: req.file.buffer });
           await pdfParser.load();
-          const result = await pdfParser.getText();
-          transcribedText = result.text || '';
+          const textResult = await pdfParser.getText();
+          transcribedText = textResult.text || '';
+          await pdfParser.destroy();
 
           const maxTextSize = 5 * 1024 * 1024;
           if (transcribedText.length > maxTextSize) {

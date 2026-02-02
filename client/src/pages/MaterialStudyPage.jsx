@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ReactMarkdown from 'react-markdown';
 import {
   ArrowLeft,
-  Sparkles,
   RefreshCw,
   MessageSquare,
   Layers,
@@ -13,6 +12,7 @@ import {
   Send,
   Loader2,
   ClipboardList,
+  Sparkles,
 } from 'lucide-react';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
@@ -126,20 +126,23 @@ const MaterialStudyPage = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="w-6 h-6 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   if (!material) {
     return (
-      <div className="text-center py-12">
-        <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Material not found</h2>
+      <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+          <FileText className="w-6 h-6 text-gray-400" />
+        </div>
+        <h2 className="font-semibold text-gray-900 mb-2">Material not found</h2>
         <Link
           to={`/workspace/${workspaceId}/library`}
-          className="text-blue-600 hover:underline"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800 transition-colors"
         >
+          <ArrowLeft className="w-4 h-4" />
           Back to Library
         </Link>
       </div>
@@ -149,34 +152,32 @@ const MaterialStudyPage = () => {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center gap-3 mb-4">
         <Link
           to={`/workspace/${workspaceId}/library`}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
         >
-          <ArrowLeft className="w-5 h-5 text-gray-600" />
+          <ArrowLeft className="w-4 h-4 text-gray-500" />
         </Link>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl lg:text-2xl font-bold text-gray-900 truncate">
-            {material.title}
-          </h1>
-          <p className="text-sm text-gray-500">
-            Uploaded {new Date(material.createdAt).toLocaleDateString()}
-          </p>
+          <h1 className="font-semibold text-gray-900 truncate">{material.title}</h1>
+          <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+            <span>{new Date(material.createdAt).toLocaleDateString()}</span>
+            <span>·</span>
+            <span className="uppercase">{material.type}</span>
+            {material.isProcessed && <span className="text-green-600">· AI Ready</span>}
+          </div>
         </div>
       </div>
 
-      {/* Split Screen Layout */}
+      {/* Split Screen */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
-        {/* Left Column - Document Preview */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-          <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-            <h2 className="font-semibold text-gray-700 flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              Document Preview
-            </h2>
+        {/* Document Preview */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h2 className="text-sm font-medium text-gray-700">Document</h2>
           </div>
-          <div className="flex-1 bg-gray-100 min-h-[400px] lg:min-h-0">
+          <div className="flex-1 bg-gray-50 min-h-[400px] lg:min-h-0">
             {material.type === 'pdf' ? (
               <iframe
                 src={material.fileUrl}
@@ -184,33 +185,33 @@ const MaterialStudyPage = () => {
                 title={material.title}
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center p-4">
+              <div className="w-full h-full flex items-center justify-center p-6">
                 <img
                   src={material.fileUrl}
                   alt={material.title}
-                  className="max-w-full max-h-full object-contain rounded-lg shadow-md"
+                  className="max-w-full max-h-full object-contain rounded-xl shadow-lg"
                 />
               </div>
             )}
           </div>
         </div>
 
-        {/* Right Column - Tabbed Interface */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+        {/* Tabbed Interface */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
           {/* Tab Headers */}
-          <div className="flex border-b border-gray-200 bg-gray-50">
+          <div className="flex border-b border-gray-100 p-1">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-sm rounded-lg transition-colors ${
                   activeTab === tab.id
-                    ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    ? 'bg-gray-100 text-gray-900 font-medium'
+                    : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 <tab.icon className="w-4 h-4" />
-                {tab.label}
+                <span className="hidden sm:inline">{tab.label}</span>
               </button>
             ))}
           </div>
@@ -225,86 +226,30 @@ const MaterialStudyPage = () => {
                     <button
                       onClick={() => summarizeMutation.mutate()}
                       disabled={summarizeMutation.isPending}
-                      className="absolute top-0 right-0 p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Regenerate summary"
+                      className="absolute top-0 right-0 p-1.5 text-gray-400 hover:text-gray-600 rounded-lg transition-colors"
                     >
-                      <RefreshCw
-                        className={`w-4 h-4 ${summarizeMutation.isPending ? 'animate-spin' : ''}`}
-                      />
+                      <RefreshCw className={`w-4 h-4 ${summarizeMutation.isPending ? 'animate-spin' : ''}`} />
                     </button>
-                    <div className="prose prose-sm max-w-none">
+                    <div className="prose prose-sm max-w-none text-gray-700">
                       <ReactMarkdown>{material.summary}</ReactMarkdown>
                     </div>
                   </div>
                 ) : !material.isProcessed && material.transcribedText ? (
-                  // Auto-processing in progress
-                  <div className="h-full flex flex-col items-center justify-center text-center py-8">
-                    <div className="space-y-4">
-                      <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto">
-                        <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900 mb-1">
-                          Auto-Generating Summary...
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          AI is analyzing your document in the background
-                        </p>
-                      </div>
-                      {/* Skeleton loader */}
-                      <div className="w-full max-w-md space-y-3 mt-4">
-                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                        <div className="h-4 bg-gray-200 rounded animate-pulse w-5/6"></div>
-                        <div className="h-4 bg-gray-200 rounded animate-pulse w-4/6"></div>
-                        <div className="h-4 bg-gray-200 rounded animate-pulse w-5/6"></div>
-                        <div className="h-4 bg-gray-200 rounded animate-pulse w-3/6"></div>
-                      </div>
-                    </div>
-                  </div>
-                ) : summarizeMutation.isPending ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center py-8">
-                    <div className="space-y-4">
-                      <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto">
-                        <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900 mb-1">
-                          Generating Summary...
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          AI is analyzing your document
-                        </p>
-                      </div>
-                      {/* Skeleton loader */}
-                      <div className="w-full max-w-md space-y-3 mt-4">
-                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                        <div className="h-4 bg-gray-200 rounded animate-pulse w-5/6"></div>
-                        <div className="h-4 bg-gray-200 rounded animate-pulse w-4/6"></div>
-                        <div className="h-4 bg-gray-200 rounded animate-pulse w-5/6"></div>
-                        <div className="h-4 bg-gray-200 rounded animate-pulse w-3/6"></div>
-                      </div>
-                    </div>
+                  <div className="h-full flex flex-col items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 text-gray-400 animate-spin mb-3" />
+                    <p className="text-sm text-gray-500">Generating summary...</p>
                   </div>
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-center py-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full flex items-center justify-center mb-4">
-                      <Sparkles className="w-8 h-8 text-purple-600" />
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">
-                      No Summary Available
-                    </h3>
-                    <p className="text-sm text-gray-500 mb-4 max-w-xs">
-                      {material.transcribedText 
-                        ? 'Generate an AI-powered summary to quickly understand the key points'
-                        : 'No text content found in this document to summarize'}
-                    </p>
+                    <p className="text-sm text-gray-500 mb-3">No summary available</p>
                     {material.transcribedText && (
                       <button
                         onClick={() => summarizeMutation.mutate()}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-all font-medium shadow-md hover:shadow-lg"
+                        disabled={summarizeMutation.isPending}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800 transition-colors"
                       >
-                        <Sparkles className="w-4 h-4" />
-                        Generate AI Summary
+                        {summarizeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                        Generate Summary
                       </button>
                     )}
                   </div>
@@ -316,20 +261,14 @@ const MaterialStudyPage = () => {
             {activeTab === 'flashcards' && (
               <div className="h-full">
                 {flashcardSets && flashcardSets.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {flashcardSets.map((set) => (
-                      <div
-                        key={set._id}
-                        className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors"
-                      >
-                        <h3 className="font-semibold text-gray-900 mb-1">{set.title}</h3>
-                        <p className="text-sm text-gray-500 mb-3">
-                          {set.cards.length} cards •{' '}
-                          {new Date(set.createdAt).toLocaleDateString()}
-                        </p>
+                      <div key={set._id} className="p-3 border border-gray-200 rounded-lg">
+                        <h3 className="font-medium text-gray-900 text-sm">{set.title}</h3>
+                        <p className="text-xs text-gray-500 mt-1">{set.cards.length} cards</p>
                         <Link
                           to={`/workspace/${workspaceId}/flashcards`}
-                          className="text-sm text-blue-600 hover:underline"
+                          className="text-xs text-gray-600 hover:text-gray-900 mt-2 inline-block"
                         >
                           View Flashcards →
                         </Link>
@@ -338,68 +277,27 @@ const MaterialStudyPage = () => {
                     <button
                       onClick={() => generateFlashcardsMutation.mutate()}
                       disabled={generateFlashcardsMutation.isPending}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-purple-400 hover:text-purple-600 transition-colors"
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-700 text-sm transition-colors"
                     >
-                      {generateFlashcardsMutation.isPending ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Brain className="w-4 h-4" />
-                      )}
-                      Generate More Flashcards
+                      {generateFlashcardsMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
+                      Generate More
                     </button>
                   </div>
                 ) : !material.isProcessed && material.transcribedText ? (
-                  // Auto-processing in progress
-                  <div className="h-full flex flex-col items-center justify-center text-center py-8">
-                    <div className="space-y-4">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto">
-                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900 mb-1">
-                          Auto-Generating Flashcards...
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          AI is creating study cards in the background
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : generateFlashcardsMutation.isPending ? (
-                  <div className="h-full flex flex-col items-center justify-center text-center py-8">
-                    <div className="space-y-4">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto">
-                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900 mb-1">
-                          Generating Flashcards...
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          AI is creating study cards
-                        </p>
-                      </div>
-                    </div>
+                  <div className="h-full flex flex-col items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 text-gray-400 animate-spin mb-3" />
+                    <p className="text-sm text-gray-500">Generating flashcards...</p>
                   </div>
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-center py-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mb-4">
-                      <Layers className="w-8 h-8 text-blue-600" />
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">
-                      No Flashcards Available
-                    </h3>
-                    <p className="text-sm text-gray-500 mb-4 max-w-xs">
-                      {material.transcribedText 
-                        ? 'Generate flashcards from this document to test your knowledge'
-                        : 'No text content found in this document to create flashcards'}
-                    </p>
+                    <p className="text-sm text-gray-500 mb-3">No flashcards available</p>
                     {material.transcribedText && (
                       <button
                         onClick={() => generateFlashcardsMutation.mutate()}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg transition-all font-medium shadow-md hover:shadow-lg"
+                        disabled={generateFlashcardsMutation.isPending}
+                        className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800 transition-colors"
                       >
-                        <Brain className="w-4 h-4" />
+                        {generateFlashcardsMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
                         Generate Flashcards
                       </button>
                     )}
@@ -411,71 +309,51 @@ const MaterialStudyPage = () => {
             {/* Chat Tab */}
             {activeTab === 'chat' && (
               <div className="h-full flex flex-col">
-                {/* Chat Messages */}
-                <div className="flex-1 overflow-auto space-y-4 mb-4 min-h-[200px]">
+                <div className="flex-1 overflow-auto space-y-3 mb-3 min-h-[200px]">
                   {chatMessages.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center py-8">
-                      <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-teal-100 rounded-full flex items-center justify-center mb-4">
-                        <MessageSquare className="w-8 h-8 text-green-600" />
-                      </div>
-                      <h3 className="font-semibold text-gray-900 mb-2">
-                        Ask Questions
-                      </h3>
-                      <p className="text-sm text-gray-500 max-w-xs">
-                        Chat with AI about this document. Ask anything about the content!
-                      </p>
+                    <div className="h-full flex items-center justify-center">
+                      <p className="text-sm text-gray-500">Ask questions about this document</p>
                     </div>
                   ) : (
                     chatMessages.map((msg, idx) => (
-                      <div
-                        key={idx}
-                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-[80%] px-4 py-2.5 rounded-2xl ${
-                            msg.role === 'user'
-                              ? 'bg-blue-600 text-white rounded-br-md'
-                              : 'bg-gray-100 text-gray-900 rounded-bl-md'
-                          }`}
-                        >
+                      <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[80%] px-3 py-2 rounded-lg text-sm ${
+                          msg.role === 'user' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'
+                        }`}>
                           {msg.role === 'assistant' ? (
                             <div className="prose prose-sm max-w-none">
                               <ReactMarkdown>{msg.content}</ReactMarkdown>
                             </div>
-                          ) : (
-                            <p className="text-sm">{msg.content}</p>
-                          )}
+                          ) : msg.content}
                         </div>
                       </div>
                     ))
                   )}
                   {chatMutation.isPending && (
                     <div className="flex justify-start">
-                      <div className="bg-gray-100 px-4 py-3 rounded-2xl rounded-bl-md">
+                      <div className="bg-gray-100 px-3 py-2 rounded-lg">
                         <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.1s]"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                          <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+                          <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0.1s]"></div>
+                          <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
                         </div>
                       </div>
                     </div>
                   )}
                 </div>
-
-                {/* Chat Input */}
                 <form onSubmit={handleSendChat} className="flex gap-2">
                   <input
                     type="text"
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
-                    placeholder="Ask a question about this document..."
-                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    placeholder="Ask a question..."
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300"
                     disabled={chatMutation.isPending}
                   />
                   <button
                     type="submit"
                     disabled={chatMutation.isPending || !chatInput.trim()}
-                    className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg transition-colors"
+                    className="px-3 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -486,27 +364,20 @@ const MaterialStudyPage = () => {
             {/* Quiz Tab */}
             {activeTab === 'quiz' && (
               <div className="h-full flex flex-col items-center justify-center text-center py-8">
-                <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mb-4">
-                  <ClipboardList className="w-8 h-8 text-indigo-600" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                  <Brain className="w-6 h-6 text-gray-600" />
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  Test Your Knowledge
-                </h3>
-                <p className="text-sm text-gray-500 mb-6 max-w-xs">
-                  Take a quiz with 10 multiple-choice questions generated from this document
-                </p>
+                <h3 className="font-medium text-gray-900 mb-2">Test Your Knowledge</h3>
+                <p className="text-sm text-gray-500 mb-4 max-w-xs">10 AI-generated questions</p>
                 {material.transcribedText ? (
                   <button
                     onClick={() => setIsQuizModalOpen(true)}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl transition-all font-medium shadow-md hover:shadow-lg"
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-800 transition-colors"
                   >
-                    <Brain className="w-5 h-5" />
                     Start Quiz
                   </button>
                 ) : (
-                  <p className="text-sm text-gray-400">
-                    No text content available for quiz generation
-                  </p>
+                  <p className="text-xs text-gray-400">No content available for quiz</p>
                 )}
               </div>
             )}
@@ -514,7 +385,6 @@ const MaterialStudyPage = () => {
         </div>
       </div>
 
-      {/* Quiz Modal */}
       <QuizModal
         isOpen={isQuizModalOpen}
         onClose={() => setIsQuizModalOpen(false)}
