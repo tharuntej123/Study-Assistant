@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -14,7 +14,8 @@ import {
   Brain,
   ClipboardList,
   RefreshCw,
-  ExternalLink,
+  Bell,
+  BellOff,
 } from 'lucide-react';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
@@ -26,6 +27,38 @@ const SESSION_TYPES = [
   { id: 'quiz', label: 'Quiz', icon: ClipboardList, color: 'bg-red-500' },
 ];
 
+// Request notification permission
+const requestNotificationPermission = async () => {
+  if (!('Notification' in window)) {
+    return 'unsupported';
+  }
+  if (Notification.permission === 'granted') {
+    return 'granted';
+  }
+  if (Notification.permission !== 'denied') {
+    const permission = await Notification.requestPermission();
+    return permission;
+  }
+  return Notification.permission;
+};
+
+// Show notification
+const showNotification = (title, body, tag) => {
+  if (Notification.permission === 'granted') {
+    const notification = new Notification(title, {
+      body,
+      icon: '/vite.svg',
+      tag,
+      requireInteraction: true,
+    });
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
+    return notification;
+  }
+};
+
 const Calendar = () => {
   const { workspaceId } = useParams();
   const queryClient = useQueryClient();
@@ -33,13 +66,29 @@ const Calendar = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSession, setEditingSession] = useState(null);
+  const [notificationPermission, setNotificationPermission] = useState(
+    'Notification' in window ? Notification.permission : 'unsupported'
+  );
+
+  const handleEnableNotifications = async () => {
+    const permission = await requestNotificationPermission();
+    setNotificationPermission(permission);
+    if (permission === 'granted') {
+      toast.success('Notifications enabled! You\'ll be reminded before your sessions.');
+      showNotification('🔔 Notifications Enabled', 'You will receive reminders before your study sessions.', 'test-notification');
+    } else if (permission === 'denied') {
+      toast.error('Notifications blocked. Please enable them in your browser settings.');
+    }
+  };
 
   // Fetch sessions
   const { data: sessionsData, isLoading: loadingSessions } = useQuery({
     queryKey: ['sessions', workspaceId, currentDate.getMonth(), currentDate.getFullYear()],
     queryFn: async () => {
       const start = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      start.setHours(0, 0, 0, 0);
       const end = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      end.setHours(23, 59, 59, 999);
       const response = await api.get(`/workspaces/${workspaceId}/sessions`, {
         params: { start: start.toISOString(), end: end.toISOString() },
       });
@@ -56,15 +105,6 @@ const Calendar = () => {
     },
   });
 
-  // Fetch calendar connection status
-  const { data: calendarStatus } = useQuery({
-    queryKey: ['calendar-status', workspaceId],
-    queryFn: async () => {
-      const response = await api.get(`/workspaces/${workspaceId}/schedule/calendar-status`);
-      return response.data;
-    },
-  });
-
   // Fetch materials for session form
   const { data: materials } = useQuery({
     queryKey: ['materials', workspaceId],
@@ -74,16 +114,44 @@ const Calendar = () => {
     },
   });
 
+  // Schedule notifications for upcoming sessions
+  useEffect(() => {
+    if (notificationPermission !== 'granted') return;
+    const timeouts = [];
+    if (sessionsData) {
+      sessionsData.forEach(session => {
+        if (session.status === 'scheduled') {
+          const sessionTime = new Date(session.startTime).getTime();
+          const notifyTime = sessionTime - ((session.reminder || 15) * 60 * 1000);
+          const now = Date.now();
+          if (notifyTime > now) {
+            const delay = notifyTime - now;
+            const timeoutId = setTimeout(() => {
+              const typeInfo = SESSION_TYPES.find(t => t.id === session.type);
+              showNotification(
+                `📚 Study Session in ${session.reminder || 15} minutes`,
+                `${session.title} - ${typeInfo?.label || 'Study'} session starting soon!`,
+                `session-${session._id}`
+              );
+            }, delay);
+            timeouts.push(timeoutId);
+          }
+        }
+      });
+    }
+    return () => timeouts.forEach(id => clearTimeout(id));
+  }, [sessionsData, notificationPermission]);
+
   // Create session mutation
   const createMutation = useMutation({
     mutationFn: async (data) => {
       const response = await api.post(`/workspaces/${workspaceId}/sessions`, data);
       return response.data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries(['sessions', workspaceId]);
       queryClient.invalidateQueries(['schedule-stats', workspaceId]);
-      toast.success(data.warning ? 'Session created (calendar sync failed)' : 'Session scheduled!');
+      toast.success('Session scheduled!');
       setIsModalOpen(false);
       setEditingSession(null);
     },
@@ -152,6 +220,7 @@ const Calendar = () => {
     if (!date || !sessionsData) return [];
     return sessionsData.filter((session) => {
       const sessionDate = new Date(session.startTime);
+      // Compare only the date parts in local timezone
       return (
         sessionDate.getDate() === date.getDate() &&
         sessionDate.getMonth() === date.getMonth() &&
@@ -208,11 +277,19 @@ const Calendar = () => {
           <p className="text-sm text-gray-500">Schedule and track your study sessions</p>
         </div>
         <div className="flex items-center gap-2">
-          {calendarStatus?.connected && (
+          {notificationPermission === 'granted' ? (
             <span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium">
-              <Check className="w-3 h-3" />
-              Google Calendar Connected
+              <Bell className="w-3 h-3" />
+              Reminders On
             </span>
+          ) : notificationPermission !== 'unsupported' && (
+            <button
+              onClick={handleEnableNotifications}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
+            >
+              <BellOff className="w-3 h-3" />
+              Enable Reminders
+            </button>
           )}
           <button
             onClick={() => {
@@ -264,6 +341,25 @@ const Calendar = () => {
           </div>
         </div>
       </div>
+
+      {/* Notification Permission Banner */}
+      {notificationPermission === 'default' && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
+          <Bell className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-medium text-blue-800">Enable session reminders</p>
+            <p className="text-sm text-blue-700 mt-0.5">
+              Get notified before your study sessions start so you never miss one.
+            </p>
+          </div>
+          <button
+            onClick={handleEnableNotifications}
+            className="flex-shrink-0 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+          >
+            Enable Notifications
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Calendar */}
@@ -383,8 +479,8 @@ const Calendar = () => {
                           <p className="text-xs text-gray-400 truncate">{session.materialId.title}</p>
                         )}
                       </div>
-                      {session.googleEventId && (
-                        <ExternalLink className="w-3 h-3 text-gray-400" title="Synced to Google Calendar" />
+                      {notificationPermission === 'granted' && (
+                        <Bell className="w-3 h-3 text-green-500" title="Reminder set" />
                       )}
                     </div>
                   </div>
@@ -420,7 +516,7 @@ const Calendar = () => {
           selectedDate={selectedDate}
           editingSession={editingSession}
           materials={materials}
-          calendarConnected={calendarStatus?.connected}
+          notificationsEnabled={notificationPermission === 'granted'}
           onSave={(data) => {
             if (editingSession) {
               updateMutation.mutate({ sessionId: editingSession._id, data });
@@ -447,22 +543,33 @@ const SessionModal = ({
   selectedDate,
   editingSession,
   materials,
-  calendarConnected,
+  notificationsEnabled,
   onSave,
   onDelete,
   isLoading,
 }) => {
+  // Helper to format date for datetime-local input (local timezone)
+  const formatDateTimeLocal = (date) => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   const [title, setTitle] = useState(editingSession?.title || '');
   const [description, setDescription] = useState(editingSession?.description || '');
   const [type, setType] = useState(editingSession?.type || 'study');
   const [materialId, setMaterialId] = useState(editingSession?.materialId?._id || '');
   const [startTime, setStartTime] = useState(() => {
     if (editingSession) {
-      return new Date(editingSession.startTime).toISOString().slice(0, 16);
+      return formatDateTimeLocal(new Date(editingSession.startTime));
     }
     const date = new Date(selectedDate || new Date());
-    date.setHours(date.getHours() + 1, 0, 0, 0);
-    return date.toISOString().slice(0, 16);
+    date.setHours(new Date().getHours() + 1, 0, 0, 0);
+    return formatDateTimeLocal(date);
   });
   const [duration, setDuration] = useState(() => {
     if (editingSession) {
@@ -470,7 +577,7 @@ const SessionModal = ({
     }
     return 60;
   });
-  const [syncToGoogle, setSyncToGoogle] = useState(calendarConnected && !editingSession?.googleEventId);
+  const [reminder, setReminder] = useState(editingSession?.reminder || 15);
   const [status, setStatus] = useState(editingSession?.status || 'scheduled');
 
   const handleSubmit = (e) => {
@@ -490,7 +597,7 @@ const SessionModal = ({
       materialId: materialId || null,
       startTime: start.toISOString(),
       endTime: end.toISOString(),
-      syncToGoogle: !editingSession && syncToGoogle,
+      reminder,
       status,
     });
   };
@@ -623,28 +730,31 @@ const SessionModal = ({
             </div>
           )}
 
-          {/* Google Calendar Sync */}
-          {!editingSession && calendarConnected && (
-            <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg cursor-pointer">
-              <input
-                type="checkbox"
-                checked={syncToGoogle}
-                onChange={(e) => setSyncToGoogle(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
-              />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-700">Add to Google Calendar</p>
-                <p className="text-xs text-gray-500">Sync this session with your calendar</p>
-              </div>
+          {/* Reminder Setting */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              <span className="flex items-center gap-1.5">
+                <Bell className="w-3.5 h-3.5" />
+                Remind me
+              </span>
             </label>
-          )}
-
-          {editingSession?.googleEventId && (
-            <p className="text-xs text-green-600 flex items-center gap-1">
-              <Check className="w-3 h-3" />
-              Synced to Google Calendar
-            </p>
-          )}
+            <select
+              value={reminder}
+              onChange={(e) => setReminder(Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300"
+            >
+              <option value={5}>5 minutes before</option>
+              <option value={10}>10 minutes before</option>
+              <option value={15}>15 minutes before</option>
+              <option value={30}>30 minutes before</option>
+              <option value={60}>1 hour before</option>
+            </select>
+            {!notificationsEnabled && (
+              <p className="text-xs text-amber-600 mt-1">
+                Enable notifications to receive reminders
+              </p>
+            )}
+          </div>
 
           {/* Actions */}
           <div className="flex gap-2 pt-2">

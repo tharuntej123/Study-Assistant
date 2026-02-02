@@ -14,6 +14,8 @@ router.get(
       'email',
       'https://www.googleapis.com/auth/calendar',
     ],
+    accessType: 'offline',
+    prompt: 'consent', // Force consent to always get refresh token
   })
 );
 
@@ -88,6 +90,39 @@ router.get('/me', protect, async (req, res) => {
 router.post('/logout', (req, res) => {
   res.clearCookie('token');
   res.json({ message: 'Logged out successfully' });
+});
+
+// Check if user has calendar access (refresh token)
+router.get('/calendar-status', protect, async (req, res) => {
+  try {
+    const User = (await import('../models/User.js')).default;
+    const user = await User.findById(req.user._id).select('+refreshToken');
+    
+    const hasCalendarAccess = !!(user && user.refreshToken);
+    
+    res.json({
+      hasCalendarAccess,
+      message: hasCalendarAccess 
+        ? 'Calendar access is configured' 
+        : 'Please re-authenticate to enable Google Calendar sync',
+    });
+  } catch (error) {
+    console.error('Calendar status error:', error.message);
+    res.status(500).json({ error: 'Failed to check calendar status' });
+  }
+});
+
+// Force re-authenticate to get calendar permissions
+router.get('/google/reconnect', (req, res, next) => {
+  passport.authenticate('google', {
+    scope: [
+      'profile',
+      'email',
+      'https://www.googleapis.com/auth/calendar',
+    ],
+    accessType: 'offline',
+    prompt: 'consent',
+  })(req, res, next);
 });
 
 export default router;
