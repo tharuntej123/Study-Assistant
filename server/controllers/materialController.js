@@ -1,7 +1,10 @@
 import multer from 'multer';
-import pdfParse from 'pdf-parse';
+import { createRequire } from 'module';
 import StudyMaterial from '../models/StudyMaterial.js';
 import { uploadFile, deleteFile } from '../services/s3Service.js';
+
+const require = createRequire(import.meta.url);
+const pdfParse = require('pdf-parse');
 
 const storage = multer.memoryStorage();
 const upload = multer({

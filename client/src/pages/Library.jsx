@@ -52,19 +52,13 @@ const Library = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Library</h1>
-        <label className="cursor-pointer">
-          <input
-            type="file"
-            accept=".pdf,image/*"
-            onChange={handleFileUpload}
-            className="hidden"
-            disabled={uploading}
-          />
-          <div className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-            <Upload className="w-5 h-5" />
-            {uploading ? 'Uploading...' : 'Upload File'}
-          </div>
-        </label>
+        <button
+          onClick={() => setIsUploadModalOpen(true)}
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          <Upload className="w-5 h-5" />
+          Upload File
+        </button>
       </div>
 
       {/* Materials Grid */}
@@ -75,13 +69,19 @@ const Library = () => {
           <p className="text-gray-500">Upload your first PDF or image to get started</p>
         </div>
       ) : (
-        <button
-          onClick={() => setIsUploadModalOpen(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          <Upload className="w-5 h-5" />
-          Upload File
-        </button   )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {data?.map((material) => (
+            <div
+              key={material._id}
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  {material.type === 'pdf' ? (
+                    <FileText className="w-6 h-6 text-blue-600" />
+                  ) : (
+                    <Image className="w-6 h-6 text-green-600" />
+                  )}
                 </div>
               </div>
 
@@ -111,11 +111,6 @@ const Library = () => {
           ))}
         </div>
       )}
-    </div>
-  );
-};
-
-export default Library;
 
       {/* Upload Modal */}
       <UploadModal
@@ -124,3 +119,8 @@ export default Library;
         workspaceId={workspaceId}
         onUploadSuccess={refetch}
       />
+    </div>
+  );
+};
+
+export default Library;

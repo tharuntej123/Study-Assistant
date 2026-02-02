@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/google`;
+    window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/auth/google`;
   };
 
   const logout = async () => {

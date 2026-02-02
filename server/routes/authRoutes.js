@@ -2,6 +2,7 @@ import express from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import { protect } from '../middleware/authMiddleware.js';
+import Workspace from '../models/Workspace.js';
 
 const router = express.Router();
 
@@ -22,7 +23,7 @@ router.get(
     session: false,
     failureRedirect: '/auth/failure',
   }),
-  (req, res) => {
+  async (req, res) => {
     try {
       const token = jwt.sign(
         { userId: req.user._id },
@@ -37,8 +38,26 @@ router.get(
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
 
+      // Find or create default workspace for the user
+      let workspace = await Workspace.findOne({
+        'members.userId': req.user._id,
+      });
+
+      if (!workspace) {
+        workspace = await Workspace.create({
+          name: 'My Workspace',
+          ownerId: req.user._id,
+          members: [
+            {
+              userId: req.user._id,
+              role: 'admin',
+            },
+          ],
+        });
+      }
+
       const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-      res.redirect(`${clientUrl}/dashboard`);
+      res.redirect(`${clientUrl}/workspace/${workspace._id}/dashboard`);
     } catch (error) {
       console.error('OAuth callback error:', error.message);
       res.redirect('/auth/failure');
