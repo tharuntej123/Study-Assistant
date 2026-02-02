@@ -38,12 +38,12 @@ const Login = () => {
           </button>
 
           <p className="text-xs text-gray-400 text-center mt-6">
-            By signing in, you agree to our Terms of Service
+            Organize your study sessions and boost your learning with StudyWorkspace AI
           </p>
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-6">
-          © 2024 StudyWorkspace
+          © 2026 StudyWorkspace
         </p>
       </div>
     </div>

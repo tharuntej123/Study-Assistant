@@ -13,6 +13,7 @@ import {
   Loader2,
   ClipboardList,
   Sparkles,
+  Share2,
 } from 'lucide-react';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
@@ -149,6 +150,15 @@ const MaterialStudyPage = () => {
     );
   }
 
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(material.fileUrl);
+      toast.success('Link copied to clipboard!');
+    } catch (error) {
+      toast.error('Failed to copy link');
+    }
+  };
+
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
@@ -168,6 +178,13 @@ const MaterialStudyPage = () => {
             {material.isProcessed && <span className="text-green-600">· AI Ready</span>}
           </div>
         </div>
+        <button
+          onClick={handleShare}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm transition-colors"
+        >
+          <Share2 className="w-4 h-4" />
+          <span className="hidden sm:inline">Share</span>
+        </button>
       </div>
 
       {/* Split Screen */}
@@ -179,11 +196,13 @@ const MaterialStudyPage = () => {
           </div>
           <div className="flex-1 bg-gray-50 min-h-[400px] lg:min-h-0">
             {material.type === 'pdf' ? (
-              <iframe
-                src={material.fileUrl}
-                className="w-full h-full min-h-[400px] lg:min-h-[500px]"
-                title={material.title}
-              />
+              <div className="w-full h-full flex items-center justify-center p-6">
+                <div className="text-center">
+                  <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">{material.title}</h3>
+                  <p className="text-sm text-gray-500">PDF Document</p>
+                </div>
+              </div>
             ) : (
               <div className="w-full h-full flex items-center justify-center p-6">
                 <img
