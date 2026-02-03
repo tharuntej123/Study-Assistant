@@ -6,7 +6,7 @@ import { uploadFile, deleteFile } from '../services/s3Service.js';
 import { generateSummary, generateFlashcards } from '../services/aiService.js';
 
 const require = createRequire(import.meta.url);
-const { PDFParse } = require('pdf-parse');
+const pdfParse = require('pdf-parse-fork');
 
 // Background AI processing function (non-blocking)
 const processAIContent = async (material, workspaceId, userId) => {
@@ -93,11 +93,8 @@ const uploadMaterial = async (req, res) => {
 
       if (req.file.mimetype === 'application/pdf') {
         try {
-          const pdfParser = new PDFParse({ data: req.file.buffer });
-          await pdfParser.load();
-          const textResult = await pdfParser.getText();
-          transcribedText = textResult.text || '';
-          await pdfParser.destroy();
+          const data = await pdfParse(req.file.buffer);
+          transcribedText = data.text || '';
 
           const maxTextSize = 5 * 1024 * 1024;
           if (transcribedText.length > maxTextSize) {
