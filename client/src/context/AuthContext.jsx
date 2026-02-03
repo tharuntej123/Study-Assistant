@@ -29,10 +29,13 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await api.post('/auth/logout');
+      localStorage.removeItem('auth_token');
       setUser(null);
       window.location.href = '/login';
     } catch (error) {
       console.error('Logout error:', error);
+      localStorage.removeItem('auth_token');
+      window.location.href = '/login';
     }
   };
 

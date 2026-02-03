@@ -19,8 +19,15 @@ const AuthCallback = () => {
       }
 
       try {
-        // Store token in cookie via API call
-        await api.post('/auth/set-token', { token });
+        // Store token in localStorage for cross-origin compatibility
+        localStorage.setItem('auth_token', token);
+        
+        // Also try to set cookie via API call (fallback)
+        try {
+          await api.post('/auth/set-token', { token });
+        } catch (cookieError) {
+          console.log('Cookie setting failed, using localStorage only');
+        }
         
         // Refresh auth state
         await checkAuth();
@@ -29,6 +36,7 @@ const AuthCallback = () => {
         navigate(`/workspace/${workspace}/dashboard`);
       } catch (error) {
         console.error('Auth callback error:', error);
+        localStorage.removeItem('auth_token');
         navigate('/login');
       }
     };
