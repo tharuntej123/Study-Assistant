@@ -1,9 +1,12 @@
 import multer from 'multer';
-import { PDFParse } from 'pdf-parse';
+import { createRequire } from 'module';
 import StudyMaterial from '../models/StudyMaterial.js';
 import FlashcardSet from '../models/FlashcardSet.js';
 import { uploadFile, deleteFile } from '../services/s3Service.js';
 import { generateSummary, generateFlashcards } from '../services/aiService.js';
+
+const require = createRequire(import.meta.url);
+const { PDFParse } = require('pdf-parse');
 
 // Background AI processing function (non-blocking)
 const processAIContent = async (material, workspaceId, userId) => {
