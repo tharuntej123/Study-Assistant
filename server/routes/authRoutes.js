@@ -23,10 +23,15 @@ router.get(
   '/google/callback',
   passport.authenticate('google', {
     session: false,
-    failureRedirect: '/auth/failure',
   }),
   async (req, res) => {
     try {
+      if (!req.user) {
+        console.error('OAuth callback error: No user found after authentication');
+        const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+        return res.redirect(`${clientUrl}/login?error=auth_failed`);
+      }
+
       const token = jwt.sign(
         { userId: req.user._id },
         process.env.JWT_SECRET,
@@ -36,7 +41,7 @@ router.get(
       res.cookie('token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
 
@@ -59,10 +64,12 @@ router.get(
       }
 
       const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-      res.redirect(`${clientUrl}/workspace/${workspace._id}/dashboard`);
+      // Pass token in URL for cross-origin auth, frontend will store it
+      res.redirect(`${clientUrl}/auth/callback?token=${token}&workspace=${workspace._id}`);
     } catch (error) {
-      console.error('OAuth callback error:', error.message);
-      res.redirect('/auth/failure');
+      console.error('OAuth callback error:', error);
+      const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+      res.redirect(`${clientUrl}/login?error=server_error`);
     }
   }
 );
@@ -88,8 +95,42 @@ router.get('/me', protect, async (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
-  res.clearCookie('token');
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  });
   res.json({ message: 'Logged out successfully' });
+});
+
+router.post('/set-token', async (req, res) => {
+  try {
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({ error: 'Token is required' });
+    }
+
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    if (!decoded.userId) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    // Set the cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({ message: 'Token set successfully' });
+  } catch (error) {
+    console.error('Set token error:', error.message);
+    res.status(401).json({ error: 'Invalid token' });
+  }
 });
 
 // Check if user has calendar access (refresh token)

@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import RequireAuth from './components/layout/RequireAuth';
 import WorkspaceLayout from './layouts/WorkspaceLayout';
 import Login from './pages/Login';
+import AuthCallback from './pages/AuthCallback';
 import Dashboard from './pages/Dashboard';
 import Library from './pages/Library';
 import Flashcards from './pages/Flashcards';
@@ -28,6 +29,7 @@ function App() {
         <Router>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             
             <Route
               path="/workspace/:workspaceId"

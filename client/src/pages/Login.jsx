@@ -1,7 +1,20 @@
 import { GraduationCap } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 const Login = () => {
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (error === 'auth_failed') {
+      toast.error('Authentication failed. Please try again.');
+    } else if (error === 'server_error') {
+      toast.error('Server error during authentication. Please try again.');
+    }
+  }, [searchParams]);
 
   const handleGoogleLogin = () => {
     window.location.href = `${API_URL}/auth/google`;
